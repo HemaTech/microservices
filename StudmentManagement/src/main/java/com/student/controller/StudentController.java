@@ -41,7 +41,7 @@ public class StudentController {
 
 	public static final Logger logger = LoggerFactory.getLogger(StudentController.class);
 	@Autowired
-	StudentService studentService;
+	StudentService studentService    ;
 
 	@Autowired
 	CertificateService certificateService;
@@ -347,5 +347,48 @@ public class StudentController {
 		}
 
 	}
+//=======================================================================//
+	
+	//@CrossOrigin(origins = "http://localhost:8080")
+		//@CrossOrigin(origins = "http://10.191.35.70:8080")
+		@RequestMapping(value = "/student/update", method = RequestMethod.PUT)
+		public ResponseEntity<?> updateStudentTest(@RequestBody StudentDTO studentdto) {
+			logger.info("Creating User : {}", studentdto);
+				
+			if (!studentService.StudenExist(studentdto.getId())) {
+				logger.error("Unable to create. A User with UID {} already exist", studentdto.getUid());
+				throw new ResourceNotFoundException("STUDENT WITH IS  " + studentdto.getUid() + " NOT FOUND");
+			} else {
+				try {
+					Optional<Student> student = studentService.getStudentByID(studentdto.getId());
 
+					if (student.isPresent()) {
+						if (studentdto.getStudent_tution_fee_detail() != null) {
+							studentdto.getStudent_tution_fee_detail().get(0).setPaid_on(new java.util.Date());
+						}
+						
+						if (studentdto.getStudent_attendance() != null) {
+						
+							int academic__year = Calendar.getInstance().get(Calendar.YEAR);
+							int academic__month = Calendar.getInstance().get(Calendar.MONTH)+1;
+							
+							
+							studentdto.getStudent_attendance().get(0).setAttendance_date(new java.util.Date());
+							studentdto.getStudent_attendance().get(0).setIs_present(true);
+							studentdto.getStudent_attendance().get(0).setAttendance_month(academic__month);
+							//studentdto.getStudent_attendance().get(0).setAcademic_year_id(studentdto);
+							
+						}
+						
+						studentService.studentupdate(studentdto, student.get());
+					}
+				} catch (Exception e) {
+					 e.printStackTrace();
+					return new ResponseEntity<String>(studentdto.getUid(), HttpStatus.CONFLICT);
+				}
+
+			}
+			return new ResponseEntity<String>(studentdto.getUid(), HttpStatus.OK);
+		}
+	
 }
